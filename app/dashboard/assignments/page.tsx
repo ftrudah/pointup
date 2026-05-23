@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ClipboardList, Plus, X, CheckCircle2, Circle } from 'lucide-react'
 
@@ -34,9 +34,9 @@ export default function AssignmentsPage() {
     priority: 'medium',
   })
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const [{ data: asgn }, { data: crss }] = await Promise.all([
@@ -54,9 +54,9 @@ export default function AssignmentsPage() {
     setAssignments(asgn ?? [])
     setCourses(crss ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()

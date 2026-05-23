@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BookOpen, Plus, Trash2, X } from 'lucide-react'
 
@@ -37,9 +37,9 @@ export default function CoursesPage() {
     year: new Date().getFullYear().toString(),
   })
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data } = await supabase
@@ -49,9 +49,9 @@ export default function CoursesPage() {
       .order('created_at', { ascending: false })
     setCourses(data ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Users, Plus, X } from 'lucide-react'
 
@@ -20,9 +20,9 @@ export default function CommunityPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ title: '', content: '' })
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('posts')
       .select('*, profiles(full_name)')
@@ -30,9 +30,9 @@ export default function CommunityPage() {
       .limit(50)
     setPosts(data ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
