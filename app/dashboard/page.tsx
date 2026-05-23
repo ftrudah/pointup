@@ -37,21 +37,20 @@ export default async function DashboardPage() {
   ])
 
   const gpa = calcGPA(courses ?? [])
-  const totalCredits = (courses ?? []).reduce((sum, c) => sum + (c.credits ?? 0), 0)
   const pendingCount = assignments?.length ?? 0
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Welcome back — here's your academic overview.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Welcome back — here&apos;s your academic overview.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: 'Current GPA', value: gpa ?? '—', icon: TrendingUp, color: 'text-emerald-600' },
           { label: 'Courses', value: courses?.length ?? 0, icon: BookOpen, color: 'text-blue-600' },
-          { label: 'Pending Tasks', value: pendingCount, icon: ClipboardList, color: 'text-amber-600' },
+          { label: 'Upcoming tests', value: pendingCount, icon: ClipboardList, color: 'text-amber-600' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
             <div className="flex items-center justify-between mb-3">
