@@ -1,6 +1,5 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signIn(formData: FormData) {
@@ -13,7 +12,7 @@ export async function signIn(formData: FormData) {
 
   if (error) return { error: error.message }
 
-  redirect('/dashboard')
+  return null
 }
 
 export async function signUp(formData: FormData) {
@@ -29,5 +28,5 @@ export async function signUp(formData: FormData) {
 
   if (error) return { error: error.message }
 
-  return { success: 'Check your email to confirm your account.' }
+  return null
 }

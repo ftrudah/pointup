@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { BookOpen, ClipboardList, TrendingUp, Award } from 'lucide-react'
+import { BookOpen, ClipboardList, TrendingUp } from 'lucide-react'
 
 function gradeToPoints(grade: string): number | null {
   const map: Record<string, number> = {
@@ -51,7 +51,6 @@ export default async function DashboardPage() {
         {[
           { label: 'Current GPA', value: gpa ?? '—', icon: TrendingUp, color: 'text-emerald-600' },
           { label: 'Courses', value: courses?.length ?? 0, icon: BookOpen, color: 'text-blue-600' },
-          { label: 'Credits', value: totalCredits, icon: Award, color: 'text-purple-600' },
           { label: 'Pending Tasks', value: pendingCount, icon: ClipboardList, color: 'text-amber-600' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
