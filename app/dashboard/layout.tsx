@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { GraduationCap, LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, UserCircle, Sparkles } from 'lucide-react'
+import { GraduationCap, LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, UserCircle, Sparkles, CalendarDays, BrainCircuit } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -11,6 +11,8 @@ const nav = [
   { href: '/dashboard/courses', label: 'Courses', icon: BookOpen },
   { href: '/dashboard/assignments', label: 'Assignments', icon: ClipboardList },
   { href: '/dashboard/community', label: 'Community', icon: Users },
+  { href: '/dashboard/calendar', label: 'Calendar', icon: CalendarDays },
+  { href: '/dashboard/study', label: 'Study Planner', icon: BrainCircuit },
   { href: '/dashboard/syllabus', label: 'Syllabus Import', icon: Sparkles },
   { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
 ]

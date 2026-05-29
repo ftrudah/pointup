@@ -1,5 +1,10 @@
+import { Suspense } from 'react'
 import AuthForm from './AuthForm'
 
 export default function AuthPage() {
-  return <AuthForm />
+  return (
+    <Suspense>
+      <AuthForm />
+    </Suspense>
+  )
 }

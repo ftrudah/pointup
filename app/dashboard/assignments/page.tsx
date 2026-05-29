@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ClipboardList, Plus, X, CheckCircle2, Circle } from 'lucide-react'
+import { ClipboardList, Plus, X, CheckCircle2, Circle, MoreVertical, Trash2, Pencil } from 'lucide-react'
+import { EditableDate } from '@/components/EditableDate'
 
 type Assignment = {
   id: string
@@ -23,6 +24,10 @@ export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
+  const [openPriority, setOpenPriority] = useState<string | null>(null)
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
+  const [editForm, setEditForm] = useState({ title: '', description: '', course_id: '', due_date: '', priority: 'medium' })
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('pending')
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -82,6 +87,55 @@ export default function AssignmentsPage() {
     const next = a.status === 'pending' ? 'completed' : 'pending'
     await supabase.from('assignments').update({ status: next }).eq('id', a.id)
     setAssignments(prev => prev.map(x => x.id === a.id ? { ...x, status: next } : x))
+  }
+
+  async function setPriority(a: Assignment, priority: string) {
+    setOpenPriority(null)
+    await supabase.from('assignments').update({ priority }).eq('id', a.id)
+    setAssignments(prev => prev.map(x => x.id === a.id ? { ...x, priority } : x))
+  }
+
+  async function handleDateChange(id: string, due_date: string) {
+    await supabase.from('assignments').update({ due_date }).eq('id', id)
+    setAssignments(prev => prev.map(a => a.id === id ? { ...a, due_date } : a))
+  }
+
+  async function handleDelete(id: string) {
+    setOpenMenu(null)
+    await supabase.from('assignments').delete().eq('id', id)
+    setAssignments(prev => prev.filter(a => a.id !== id))
+  }
+
+  function openEdit(a: Assignment) {
+    setOpenMenu(null)
+    setEditingAssignment(a)
+    setEditForm({
+      title: a.title,
+      description: a.description ?? '',
+      course_id: a.course_id ?? '',
+      due_date: a.due_date ?? '',
+      priority: a.priority ?? 'medium',
+    })
+  }
+
+  async function handleEditSave(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingAssignment) return
+    setSaving(true)
+    await supabase.from('assignments').update({
+      title: editForm.title,
+      description: editForm.description || null,
+      course_id: editForm.course_id || null,
+      due_date: editForm.due_date || null,
+      priority: editForm.priority,
+    }).eq('id', editingAssignment.id)
+    setAssignments(prev => prev.map(a =>
+      a.id === editingAssignment.id
+        ? { ...a, title: editForm.title, description: editForm.description || null, course_id: editForm.course_id || null, due_date: editForm.due_date || null, priority: editForm.priority }
+        : a
+    ))
+    setSaving(false)
+    setEditingAssignment(null)
   }
 
   const filtered = assignments.filter(a => filter === 'all' ? true : a.status === filter)
@@ -212,6 +266,87 @@ export default function AssignmentsPage() {
         </div>
       )}
 
+      {editingAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Edit Assignment</h2>
+              <button onClick={() => setEditingAssignment(null)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div>
+                <label className={labelClass}>Title</label>
+                <input
+                  required
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Course</label>
+                <select
+                  value={editForm.course_id}
+                  onChange={e => setEditForm(f => ({ ...f, course_id: e.target.value }))}
+                  className={inputClass}
+                >
+                  <option value="">No course</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Due Date</label>
+                  <input
+                    type="date"
+                    value={editForm.due_date}
+                    onChange={e => setEditForm(f => ({ ...f, due_date: e.target.value }))}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Priority</label>
+                  <select
+                    value={editForm.priority}
+                    onChange={e => setEditForm(f => ({ ...f, priority: e.target.value }))}
+                    className={inputClass}
+                  >
+                    {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Description (optional)</label>
+                <textarea
+                  rows={2}
+                  value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  className={inputClass + ' resize-none'}
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditingAssignment(null)}
+                  className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 rounded-lg bg-zinc-900 dark:bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         {loading ? (
           <div className="text-center py-12 text-sm text-zinc-500 dark:text-zinc-400">Loading...</div>
@@ -245,14 +380,64 @@ export default function AssignmentsPage() {
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                     {(a as { courses?: { name: string } | null }).courses?.name ?? 'No course'}
-                    {a.due_date && ` · Due ${new Date(a.due_date + 'T00:00:00').toLocaleDateString()}`}
+                    {' · Due '}
+                    <EditableDate date={a.due_date} onSave={(d) => handleDateChange(a.id, d)} />
                   </p>
                 </div>
-                {a.priority && (
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${priorityStyle(a.priority)}`}>
-                    {a.priority}
-                  </span>
-                )}
+                <div className="relative flex-shrink-0">
+                  <button
+                    onClick={() => setOpenPriority(openPriority === a.id ? null : a.id)}
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-70 ${priorityStyle(a.priority)}`}
+                  >
+                    {a.priority ?? 'low'} ▾
+                  </button>
+                  {openPriority === a.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setOpenPriority(null)} />
+                      <div className="absolute right-0 top-full mt-1 z-20 w-28 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-lg overflow-hidden">
+                        {PRIORITIES.map(p => (
+                          <button
+                            key={p}
+                            onClick={() => setPriority(a, p)}
+                            className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700 ${a.priority === p ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-500 dark:text-zinc-400'}`}
+                          >
+                            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${p === 'high' ? 'bg-red-500' : p === 'medium' ? 'bg-amber-500' : 'bg-zinc-400'}`} />
+                            {p.charAt(0).toUpperCase() + p.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="relative flex-shrink-0">
+                  <button
+                    onClick={() => setOpenMenu(openMenu === a.id ? null : a.id)}
+                    className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {openMenu === a.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
+                      <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-lg overflow-hidden">
+                        <button
+                          onClick={() => openEdit(a)}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(a.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
