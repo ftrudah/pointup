@@ -209,7 +209,7 @@ export default function CalendarPage() {
       })
       .select('id, title, due_date, priority, status, course_id, courses(name)')
       .single()
-    if (newA) { setAssignments(prev => [...prev, newA as Assignment]); setSelectedDate(saveDate) }
+    if (newA) { setAssignments(prev => [...prev, newA as unknown as Assignment]); setSelectedDate(saveDate) }
     setSaving(false)
     setAddingDate(null)
     setAddType(null)
