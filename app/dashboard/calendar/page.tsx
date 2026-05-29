@@ -122,7 +122,7 @@ export default function CalendarPage() {
         .eq('user_id', user.id)
         .order('name'),
     ])
-    setAssignments((asgn ?? []) as Assignment[])
+    setAssignments((asgn ?? []) as unknown as Assignment[])
     setCourses(crss ?? [])
     setLoading(false)
   }, [supabase])
