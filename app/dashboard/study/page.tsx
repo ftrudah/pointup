@@ -80,7 +80,7 @@ export default function StudyPage() {
       .not('due_date', 'is', null)
       .gte('due_date', todayStr)
       .order('due_date', { ascending: true })
-    setAssignments((data ?? []) as Assignment[])
+    setAssignments((data ?? []) as unknown as Assignment[])
     setLoading(false)
   }, [supabase, todayStr])
 
